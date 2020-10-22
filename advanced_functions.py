@@ -50,7 +50,7 @@ def undistort(img, cal_dir='camera_cal/cal_pickle.p'):
     mtx = file['mtx']
     dist = file['dist']
     dst = cv2.undistort(img, mtx, dist, None, mtx)
-    
+
     return dst
 
 ##### MASK ROBOT CHASSIS #####
@@ -152,7 +152,6 @@ def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
     
-    
     # Set height of windows
     window_height = np.int(img.shape[0]/nwindows)
     # Identify the x and y positions of all nonzero pixels in the image
@@ -162,7 +161,6 @@ def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
     # Current positions to be updated for each window
     leftx_current = leftx_base
     rightx_current = rightx_base
-    
     
     # Create empty lists to receive left and right lane pixel indices
     left_lane_inds = []
@@ -197,7 +195,6 @@ def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
         if len(good_right_inds) > minpix:        
             rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
         
-        
 #        if len(good_right_inds) > minpix:        
 #            rightx_current = np.int(np.mean([leftx_current +900, np.mean(nonzerox[good_right_inds])]))
 #        elif len(good_left_inds) > minpix:
@@ -206,7 +203,6 @@ def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
 #            leftx_current = np.int(np.mean([rightx_current -900, np.mean(nonzerox[good_left_inds])]))
 #        elif len(good_right_inds) > minpix:
 #            leftx_current = np.int(np.mean([np.mean(nonzerox[good_right_inds]) -900, leftx_current]))
-
 
     # Concatenate the arrays of indices
     left_lane_inds = np.concatenate(left_lane_inds)
@@ -299,7 +295,7 @@ def vid_pipeline(img_original):
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontColor = (0, 0, 0)
-    fontSize=0.5
+    fontSize=1.5
     #cv2.putText(img_overlay, 'Lane Curvature: {:.0f} m'.format(lane_curve), (100, 620), font, 1, fontColor, 5)
     cv2.putText(img_overlay, 'Vehicle offset: {:.4f} m'.format(curverad[2]), (100, 650), font, 2, fontColor, 5)
 
