@@ -71,7 +71,7 @@ def region_of_interest(image):
 
 ##### PIPELINE AND PERSPECTIVE WARP #####
 
-def pipeline(img, s_thresh=(100, 255), sx_thresh=(85, 255)):
+def pipeline(img, s_thresh=(100, 255), sx_thresh=(200, 255)):
     #img = undistort(img)
     img = np.copy(img)
     # Convert to HLS color space and separate the V channel
@@ -98,10 +98,10 @@ def pipeline(img, s_thresh=(100, 255), sx_thresh=(85, 255)):
     combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
     return combined_binary
 
-def perspective_warp(img, 
+def perspective_warp(img,
                      dst_size=(1280,720),
-                     src=np.float32([(0.43,0.15),(0.58,0.15),(0.1,1),(1,1)]),
-                     dst=np.float32([(0,0), (1, 0), (0,1), (1,1)])):
+                     src=np.float32([(0.20,0.15),   (0.75,0.15),    (0,0.8),    (1,1)]),
+                     dst=np.float32([(0,0),         (1, 0),         (0,1),      (1,1)])):
     img_size = np.float32([(img.shape[1],img.shape[0])])
     src = src* img_size
     # For destination points, I'm arbitrarily choosing some points to be
@@ -116,8 +116,8 @@ def perspective_warp(img,
 
 def inv_perspective_warp(img, 
                      dst_size=(1280,720),
-                     src=np.float32([(0,0), (1, 0), (0,1), (1,1)]),
-                     dst=np.float32([(0.43,0.15),(0.58,0.15),(0.1,1),(1,1)])):
+                     src=np.float32([(0,0),         (1, 0),         (0,1),      (1,1)]),
+                     dst=np.float32([(0.20,0.15),   (0.75,0.15),    (0,0.8),    (1,1)])):
     img_size = np.float32([(img.shape[1],img.shape[0])])
     src = src* img_size
     # For destination points, I'm arbitrarily choosing some points to be
@@ -140,7 +140,8 @@ left_a, left_b, left_c = [],[],[]
 right_a, right_b, right_c = [],[],[]
 
 def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
-    global left_a, left_b, left_c,right_a, right_b, right_c 
+    global left_a, left_b, left_c
+    global right_a, right_b, right_c
     left_fit_= np.empty(3)
     right_fit_ = np.empty(3)
     out_img = np.dstack((img, img, img))*255
@@ -299,8 +300,8 @@ def vid_pipeline(img_original):
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontColor = (0, 0, 0)
     fontSize=0.5
-    cv2.putText(img_overlay, 'Lane Curvature: {:.0f} m'.format(lane_curve), (570, 620), font, fontSize, fontColor, 2)
-    cv2.putText(img_overlay, 'Vehicle offset: {:.4f} m'.format(curverad[2]), (570, 650), font, fontSize, fontColor, 2)
+    #cv2.putText(img_overlay, 'Lane Curvature: {:.0f} m'.format(lane_curve), (100, 620), font, 1, fontColor, 5)
+    cv2.putText(img_overlay, 'Vehicle offset: {:.4f} m'.format(curverad[2]), (100, 650), font, 2, fontColor, 5)
 
     display(img_original, img_perspective, out_img, img_overlay, curves, ploty)
 
@@ -319,8 +320,8 @@ def display(img_original, img_filter, img_window, img_overlay, curves, ploty):
     ax2.set_title('Filter + Perspective Transform', fontsize=15)
 
     ax3.imshow(img_window)
-    ax3.plot(curves[0], ploty, color='yellow', linewidth=10)
-    ax3.plot(curves[1], ploty, color='yellow', linewidth=10)
+    ax3.plot(curves[0], ploty, color='yellow', linewidth=5)
+    ax3.plot(curves[1], ploty, color='yellow', linewidth=5)
     ax3.set_title('Sliding Window + Curve Fit', fontsize=15)
 
     ax4.imshow(img_overlay)
