@@ -71,7 +71,7 @@ def region_of_interest(image):
 
 ##### PIPELINE AND PERSPECTIVE WARP #####
 
-def pipeline(img, s_thresh=(200, 255), sx_thresh=(150, 255)):
+def pipeline(img, s_thresh=(100, 255), sx_thresh=(200, 255)):
     #img = undistort(img)
     img = np.copy(img)
     # Convert to HLS color space and separate the V channel
@@ -207,24 +207,6 @@ def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
 
     return out_img, right_fitx, right_fit_, ploty
 
-def get_curve(img, rightx):
-    ploty = np.linspace(0, img.shape[0]-1, img.shape[0])
-    y_eval = np.max(ploty)
-    ym_per_pix = 30.5/720 # meters per pixel in y dimension
-    xm_per_pix = 3.7/720 # meters per pixel in x dimension
-
-    # Fit new polynomials to x,y in world space
-    right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
-    # Calculate the new radii of curvature
-    right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
-
-    car_pos = img.shape[1]/2
-    r_fit_x_int = right_fit_cr[0]*img.shape[0]**2 + right_fit_cr[1]*img.shape[0] + right_fit_cr[2]
-    lane_center_position = r_fit_x_int
-    center = (car_pos - lane_center_position) * xm_per_pix / 10
-    # Now our radius of curvature is in meters
-    return (right_curverad, center)
-
 def draw_lanes(img, right_fit):
     ploty = np.linspace(0, img.shape[0]-1, img.shape[0])
     color_img = np.zeros_like(img)
@@ -237,7 +219,6 @@ def draw_lanes(img, right_fit):
     points = np.hstack((left, right))
 
     cv2.fillPoly(color_img, np.int_(points), (43,255,0))
-    #inv_perspective = inv_perspective_warp(color_img)
     inv_perspective = color_img
     inv_perspective = cv2.addWeighted(img, 1, inv_perspective, 0.7, 0)
     inv_perspective = cv2.addWeighted(img, 1, inv_perspective, 0.7, 0)
@@ -246,27 +227,25 @@ def draw_lanes(img, right_fit):
 ##### VIDEO PIPELINE #####
 
 def vid_pipeline(img_original):
-    global running_avg
-    global index
-
     img_pipeline = pipeline(img_original)
     img_roi = region_of_interest(img_pipeline)
-    #img_perspective = perspective_warp(img_roi)
-
     out_img, curve, lanes, ploty = sliding_window(img_roi, draw_windows=False)
-    curverad = get_curve(img_original, curve)
+
+    # Calculate distance from line
+    center = img_original.shape[1]/2
+    distance_from_line = lanes[2] - center
     img_overlay = draw_lanes(img_original, curve)
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontColor = (0, 0, 0)
-    fontSize=1.5
-    cv2.putText(img_overlay, 'Distance: {:.4f} m'.format(curverad[1]), (100, 650), font, 2, fontColor, 5)
+    fontSize=1
+    cv2.putText(img_overlay, 'Center to line: {:.4f} px'.format(distance_from_line), (400, 650), font, fontSize, fontColor, 2)
 
     #display(img_original, img_roi, out_img, img_overlay, curve, ploty)
 
-    return curverad[1], img_overlay
+    return distance_from_line, img_overlay
 
-#### Display #####
+##### Display #####
 
 def display(img_original, img_filter, img_window, img_overlay, curve, ploty):
 
