@@ -6,19 +6,10 @@
 # Line Detection Class                          #
 # ********************************************* #
 
-# *************** Methods Used **************** #
-# 1.                                            #
-# 2.                                            #
-# 3.                                            #
-# 4.                                            #
-# 5.                                            #
-# ********************************************* #
-
 # Import the required libraries
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from datetime import datetime
-import numpy as np
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
 import sys
@@ -68,16 +59,12 @@ class LineDetection:
         #cv2.imshow("Original Image", original_image)
         #cv2.waitKey(2)
 
-        # Run Script Here
-        processed_image = vid_pipeline(original_image)
-        #cv2.imshow("Processed Image", processed_image)
-        #cv2.waitKey(2)
+        # Run Advanced Line Detection
+        distance, processed_image = vid_pipeline(original_image)
+        cv2.imshow("Processed Image", processed_image)
+        cv2.waitKey(2)
 
-        print ("total callback", datetime.now() - time_callback)
-
-    def NEW_FUNCTION(self, image):
-
-        return image
+        #print ("total callback", datetime.now() - time_callback)
 
     def cleanup(self):
         print "Shutting down vision node."
