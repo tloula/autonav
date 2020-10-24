@@ -140,10 +140,8 @@ def draw_lanes(img, right_fit):
     points = np.hstack((left, right))
 
     cv2.fillPoly(color_img, np.int_(points), (43,255,0))
-    inv_perspective = color_img
-    inv_perspective = cv2.addWeighted(img, 1, inv_perspective, 0.7, 0)
-    inv_perspective = cv2.addWeighted(img, 1, inv_perspective, 0.7, 0)
-    return inv_perspective
+    overlay_img = cv2.addWeighted(img, 1, color_img, 0.7, 0)
+    return overlay_img
 
 ##### VIDEO PIPELINE #####
 
@@ -160,10 +158,9 @@ def vid_pipeline(img_original):
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontColor = (0, 0, 0)
     fontSize=1
-    cv2.putText(img_overlay, 'Center to line: {:.4f} px'.format(distance_from_line), (400, 650), font, fontSize, fontColor, 2)
+    cv2.putText(img_overlay, 'CENTER TO LINE: {:.4f} px'.format(distance_from_line), (400, 650), font, fontSize, fontColor, 2)
 
     #display(img_original, img_roi, out_img, img_overlay, curve, ploty)
-
     return distance_from_line, img_overlay
 
 ##### Display #####
