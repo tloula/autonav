@@ -25,7 +25,7 @@ def region_of_interest(image):
 
 ##### PIPELINE AND PERSPECTIVE WARP #####
 
-def pipeline(img, s_thresh=(100, 255), sx_thresh=(200, 255)):
+def pipeline(img, s_thresh=(175, 255), sx_thresh=(200, 255)):
     img = np.copy(img)
     # Convert to HLS color space and separate the V channel
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
@@ -59,7 +59,7 @@ def get_hist(img):
 
 right_a, right_b, right_c = [],[],[]
 
-def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
+def sliding_window(img, nwindows=9, margin=100, minpix = 1, draw_windows=True):
     global right_a, right_b, right_c
     right_fit_ = np.empty(3)
     out_img = np.dstack((img, img, img))*255
@@ -110,15 +110,17 @@ def sliding_window(img, nwindows=9, margin=150, minpix = 1, draw_windows=True):
     righty = nonzeroy[right_lane_inds] 
 
     # Fit a second order polynomial to each
+    # Outputs constant coefficient values for second order polynomial y = ax**2 + bx + c
     right_fit = np.polyfit(righty, rightx, 2)
 
     right_a.append(right_fit[0])
     right_b.append(right_fit[1])
     right_c.append(right_fit[2])
 
-    right_fit_[0] = np.mean(right_a[-10:])
-    right_fit_[1] = np.mean(right_b[-10:])
-    right_fit_[2] = np.mean(right_c[-10:])
+    # Calculate the current line position based on the average of the last 3 values
+    right_fit_[0] = np.mean(right_a[-1:])
+    right_fit_[1] = np.mean(right_b[-1:])
+    right_fit_[2] = np.mean(right_c[-1:])
 
     # Generate x and y values for plotting
     ploty = np.linspace(0, img.shape[0]-1, img.shape[0] )
@@ -148,11 +150,12 @@ def draw_lanes(img, right_fit):
 def vid_pipeline(img_original):
     img_pipeline = pipeline(img_original)
     img_roi = region_of_interest(img_pipeline)
-    out_img, curve, lanes, ploty = sliding_window(img_roi, draw_windows=False)
+    out_img, curve, lanes, ploty = sliding_window(img_roi, draw_windows=True)
 
-    # Calculate distance from line
+    # Calculate distance from line using the c value of the second order polynomial
     center = img_original.shape[1]/2
     distance_from_line = lanes[2] - center
+
     img_overlay = draw_lanes(img_original, curve)
 
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -161,6 +164,7 @@ def vid_pipeline(img_original):
     cv2.putText(img_overlay, 'CENTER TO LINE: {:.4f} px'.format(distance_from_line), (400, 650), font, fontSize, fontColor, 2)
 
     #display(img_original, img_roi, out_img, img_overlay, curve, ploty)
+
     return distance_from_line, img_overlay
 
 ##### Display #####
