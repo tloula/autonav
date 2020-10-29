@@ -14,10 +14,10 @@ import rospy
 from sensor_msgs.msg import Image, CameraInfo
 import sys
 from advanced_functions import vid_pipeline
+from std_msgs.msg import Float32 
 
-# Instructions
 # Start RealSense Publisher: $ roslaunch realsense2_camera rs_camera.launch
-# Run This Script: $ rosrun lines line_detection_template.py
+# Run This Script: $ rosrun lines line_detection_advanced.py
 
 # ROS Image Viewer: $ rosrun image_view image_view image:=/camera/color/image_raw
 
@@ -38,11 +38,14 @@ class LineDetection:
         right_curves, left_curves = [],[]
 
         # Subscribe to the camera image and depth topics and set the appropriate callbacks
-        # self.image_sub = rospy.Subscriber("/camera/color/image_raw", Image, vid_pipeline, queue_size=1, buff_size=2**24)
+        self.image_sub = rospy.Subscriber("/camera/color/image_raw", Image, self.image_callback, queue_size=1, buff_size=2**24)
 
         # Subscribe to prerecorded .bag files  
-        self.image_sub = rospy.Subscriber("/device_0/sensor_1/Color_0/image/data/", Image, self.image_callback, queue_size=1, buff_size=2**24)
+        #self.image_sub = rospy.Subscriber("/device_0/sensor_1/Color_0/image/data/", Image, self.image_callback, queue_size=1, buff_size=2**24)
 
+        # Publish distance from line to wheel_distance topic to be read by motor controllers
+        #self.motor_pub = rospy.Publisher("wheel_distance", Float32, queue_size=10) # consider changing queue_size
+        
         rospy.loginfo("Waiting for image topics...")
 
     def image_callback(self, ros_image):
@@ -63,6 +66,12 @@ class LineDetection:
         distance, processed_image = vid_pipeline(original_image)
         cv2.imshow("Processed Image", processed_image)
         cv2.waitKey(2)
+
+        # Publish distance to motor controller
+        self.motor_pub.publish(distance)
+        rospy.loginfo(distance)
+        with open("/home/autonav/Documents/better_distances.csv", 'a+') as f:
+            f.write("%s," % distance)
 
         #print ("total callback", datetime.now() - time_callback)
 
