@@ -55,6 +55,9 @@ class LineDetection:
         cv2.imshow("Processed Image", img_overlay)
         cv2.waitKey(2)
 
+        # Send Stop Command If Lost Line
+        if (confidence < .55): distance = 7777
+
         # Publish distance to motor controller
         self.motor_pub.publish(distance)
         rospy.loginfo(distance)

@@ -178,15 +178,27 @@ def vid_pipeline(img_original):
 
     # Calculate R2 Confidence
     if (R2 < 15000000): r2_confidence = 1
-    if (R2 < 25000000): r2_confidence = .9
+    elif (R2 < 25000000): r2_confidence = .9
     elif (R2 < 40000000): r2_confidence = .25
     else: r2_confidence = 0
 
-    # Calculate Histogram Confidence
-    hist_confidence = min(max(histogram) * 0.0000166666667,  1)
+    # Calculate Histogram Confidence Using Constant Y Value of 60,000
+    static_hist_confidence = min(max(histogram) * 0.0000166666667,  1)
+
+    # Calculate Histogram Confidence Using Peak Relative to Edges
+    padding = 25
+    edge_magnitude = 6
+    hist_max_index = np.where(histogram == max(histogram))[0][0]
+    sum_max = sum(histogram[hist_max_index-padding:hist_max_index+padding])
+    sum_edge = sum(histogram[hist_max_index-padding*edge_magnitude:hist_max_index-padding]) + sum(histogram[hist_max_index+padding:hist_max_index+padding*edge_magnitude])
+    dynamic_hist_confidence = min(sum_max / sum_edge,  1)
 
     # Calculate Combined Confidence
-    confidence = (r2_confidence + hist_confidence) / 2
+    confidence = (r2_confidence + static_hist_confidence + dynamic_hist_confidence) / 3
+
+    # Diagnostic Output
+    print("Stat Hist Confidence: {:.4f} | Dyn Hist Conf: {:.4f} | R2: {:.4f} | Avg: {:.4f}".format(
+        static_hist_confidence, dynamic_hist_confidence, R2, confidence))
 
     # Overlay Distance on Display
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -198,7 +210,7 @@ def vid_pipeline(img_original):
     callback_times.append(datetime.now() - start_pipeline)
     if output_times: print("Total Pipeline: {}".format(sum(callback_times[-10:], timedelta(0))/len(callback_times[-10:])))
 
-    display(img_original, img_roi, histogram, out_img, img_overlay, curve, ploty)
+    #display(img_original, img_roi, histogram, out_img, img_overlay, curve, ploty)
 
     return img_overlay, distance_from_line, confidence
 
