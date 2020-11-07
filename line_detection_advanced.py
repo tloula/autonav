@@ -11,6 +11,7 @@ from advanced_functions import vid_pipeline
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from datetime import datetime
+import time
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import Float32
@@ -40,6 +41,8 @@ class LineDetection:
         # Publish distance from line to wheel_distance topic to be read by motor controllers
         self.motor_pub = rospy.Publisher("wheel_distance", Float32, queue_size=10) # consider changing queue_size
 
+        #self.log_file = open('/home/autonav/Documents/distances_adv_slower.csv', 'w')
+	#self.log_file.write('Time, Distance\n')
         rospy.loginfo("Waiting for image topics...")
 
     def image_callback(self, ros_image):
@@ -50,14 +53,22 @@ class LineDetection:
         except CvBridgeError as e:
             rospy.logerr("CvBridge could not convert images from realsense to opencv")
 
+        # Resize Image
+        scale_percent = 60 # percent of original size
+        width = int(original_image.shape[1] * scale_percent / 100)
+        height = int(original_image.shape[0] * scale_percent / 100)
+        resized_image = cv2.resize(original_image, (width, height), interpolation = cv2.INTER_AREA)
+
         # Run Advanced Line Detection
-        img_overlay, distance, confidence = vid_pipeline(original_image)
+        img_overlay, distance, confidence = vid_pipeline(resized_image)
         cv2.imshow("Processed Image", img_overlay)
         cv2.waitKey(2)
 
         # Send Stop Command If Lost Line
-        if (confidence < .55): distance = 7777
+        if (confidence < .005): distance = 7777
 
+        ts = datetime.fromtimestamp(time.time()).strftime('%Y%m%d_%H:%M:%S')
+        #self.log_file.write(ts + ',' + str(distance) + '\n')
         # Publish distance to motor controller
         self.motor_pub.publish(distance)
         rospy.loginfo(distance)
@@ -65,8 +76,9 @@ class LineDetection:
             f.write("%s," % distance)
 
     def cleanup(self):
-        print "Shutting down vision node."
+        print ("Shutting down vision node.")
         cv2.destroyAllWindows()  
+        #self.log_file.close()
 
 def main(args):
     ld = LineDetection()

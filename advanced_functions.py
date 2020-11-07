@@ -8,13 +8,30 @@ import matplotlib.pyplot as plt
 import pickle
 from cv_bridge import CvBridge, CvBridgeError
 
+##### CROP TOP OF IMAGE #####
+
+def crop(image, y=0, x=0):
+    h, w, _ = image.shape
+    return image[y:h, x:w]
+
 ##### MASK ROBOT CHASSIS #####
 
 def region_of_interest(image):
     height, width = image.shape
+
+    # Polygon Points
+    left_top            = (0, 0)
+    left_bottom         = (0, height)
+    left_lower_frame    = (int(0.27*width), height)
+    left_upper_frame    = (int(0.29*width), int(0.65*height))
+    right_upper_frame   = (int(0.75*width), int(0.65*height))
+    right_lower_frame   = (int(0.82*width), height)
+    right_bottom        = (width, height)
+    right_top           = (width, 0)
+
     polygons = np.array(
-        [[(0, 0), (0, height), (345, height), (385, 470),
-        (950, 470), (1050, height), (width, height), (width, 0)]])
+        [[left_top, left_bottom, left_lower_frame, left_upper_frame,
+        right_upper_frame, right_lower_frame, right_bottom, right_top]])
     mask = np.zeros_like(image)
 
     # Fill poly-function deals with multiple polygon
@@ -39,10 +56,12 @@ def get_hist(img):
 
 right_a, right_b, right_c = [],[],[]
 
-def sliding_window(img, nwindows=15, margin=100, minpix = 1,
-    average_values=2, region_start_y=600, region_end_y=700, draw_windows=True):
+def sliding_window(img, nwindows=12, margin=100, minpix = 1, average_values=2, draw_windows=True):
 
     global right_a, right_b, right_c
+
+    region_start_y = img.shape[0] - img.shape[0]/6
+    region_end_y = img.shape[0] - img.shape[0]/30
 
     right_fit_ = np.empty(3)
     out_img = np.dstack((img, img, img))*255
@@ -56,7 +75,7 @@ def sliding_window(img, nwindows=15, margin=100, minpix = 1,
     window_height = np.int(img.shape[0]/nwindows)
 
     # Identify the x and y positions of all nonzero pixels in the image
-    nonzero = img.nonzero()
+    nonzero = img.nonzero()             # TODO WAY TOO SLOW!!!
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
 
@@ -130,8 +149,9 @@ def draw_lanes(img, right_fit):
     ploty = np.linspace(0, img.shape[0]-1, img.shape[0])
     color_img = np.zeros_like(img)
 
-    left_fit = [x - 20 for x in right_fit]
-    right_fit = [x + 20 for x in right_fit]
+    line_half_width = 0.015*img.shape[1]
+    left_fit = [x - line_half_width for x in right_fit]
+    right_fit = [x + line_half_width for x in right_fit]
 
     left = np.array([np.transpose(np.vstack([left_fit, ploty]))])
     right = np.array([np.flipud(np.transpose(np.vstack([right_fit, ploty])))])
@@ -152,9 +172,14 @@ def vid_pipeline(img_original):
     output_times = False
     start_pipeline = datetime.now()
 
+    # Crop Image
+    start = datetime.now()
+    img_crop = crop(img_original, 50, 0)
+    if output_times: print("Cropping: {}".format(datetime.now() - start))
+
     # Threshold Image
     start = datetime.now()
-    img_thresh = threshold(img_original)
+    img_thresh = threshold(img_crop)
     if output_times: print("Thresholding: {}".format(datetime.now() - start))
 
     # Mask Region of Interest
@@ -169,11 +194,11 @@ def vid_pipeline(img_original):
 
     # Overlay Line for Display
     start = datetime.now()
-    img_overlay = draw_lanes(img_original, curve)
+    img_overlay = draw_lanes(img_crop, curve)
     if output_times: print("Line Overlay: {}".format(datetime.now() - start))
 
     # Calculate distance using average of x pixels 600-700
-    center = img_original.shape[1]/2
+    center = img_crop.shape[1]/2
     distance_from_line = line_x - center
 
     # Calculate R2 Confidence
@@ -197,20 +222,22 @@ def vid_pipeline(img_original):
     confidence = (r2_confidence + static_hist_confidence + dynamic_hist_confidence) / 3
 
     # Diagnostic Output
-    print("Stat Hist Confidence: {:.4f} | Dyn Hist Conf: {:.4f} | R2: {:.4f} | Avg: {:.4f}".format(
-        static_hist_confidence, dynamic_hist_confidence, R2, confidence))
+    #print("Stat Hist Confidence: {:.4f} | Dyn Hist Conf: {:.4f} | R2: {:.4f} | Avg: {:.4f}".format(
+    #    static_hist_confidence, dynamic_hist_confidence, R2, confidence))
 
     # Overlay Distance on Display
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontColor = (0, 0, 0)
     fontSize=1
-    cv2.putText(img_overlay, 'CENTER TO LINE: {:.4f} px'.format(distance_from_line), (400, 650), font, fontSize, fontColor, 2)
-    cv2.putText(img_overlay, 'CONFIDENCE: {:.2f}%'.format(confidence*100), (400, 700), font, fontSize, fontColor, 2)
+    text_pos_y = int(0.15*img_overlay.shape[0])
+    text_pos_x = int(0.05*img_overlay.shape[1])
+    cv2.putText(img_overlay, 'DISTANCE: {:.4f}px'.format(distance_from_line), (text_pos_x, text_pos_y), font, fontSize, fontColor, 2)
+    cv2.putText(img_overlay, 'CONFIDENCE: {:.2f}%'.format(confidence*100), (text_pos_x, text_pos_y+50), font, fontSize, fontColor, 2)
 
     callback_times.append(datetime.now() - start_pipeline)
     if output_times: print("Total Pipeline: {}".format(sum(callback_times[-10:], timedelta(0))/len(callback_times[-10:])))
 
-    #display(img_original, img_roi, histogram, out_img, img_overlay, curve, ploty)
+    #display(img_crop, img_roi, histogram, out_img, img_overlay, curve, ploty)
 
     return img_overlay, distance_from_line, confidence
 
