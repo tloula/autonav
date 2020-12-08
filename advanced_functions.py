@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import numpy as np
+import cupy as cp
 import pandas as pd
 import cv2
 import os
@@ -174,7 +175,7 @@ def vid_pipeline(img_original):
 
     # Crop Image
     start = datetime.now()
-    img_crop = crop(img_original, 50, 0)
+    img_crop = crop(img_original, 0, 0)
     if output_times: print("Cropping: {}".format(datetime.now() - start))
 
     # Threshold Image
