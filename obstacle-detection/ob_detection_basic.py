@@ -55,9 +55,11 @@ class ObstacleDetection:
         # Initialze object detection publisher - DO WE NEED THIS HERE?
         # self.motor_pub = rospy.Publisher("ob_distance", Float32, queue_size=10) # consider changing queue_size
 
+        # Initialize primary variables
         self.object_history = [0] * self.BUFF_SIZE
         self.history_idx = 0
         self.path_clear = True
+
         rospy.loginfo("Waiting for image topics...")
 
     def state_callback(self, new_state):
@@ -90,7 +92,8 @@ class ObstacleDetection:
         cv2.imshow("original", cv_depth_image)
         cv2.waitKey(2)
 
-        self.obstacle_search(cv_depth_image)
+        self.determine_obstacle(cv_depth_image)
+        self.determine_state()
 
     # Use cv_bridge() to convert the ROS image to OpenCV format
     def bridge_image(self, ros_image):
@@ -100,13 +103,8 @@ class ObstacleDetection:
             rospy.logerr("CvBridge could not convert images from realsense to opencv")
         return cv_image
 
-    def obstacle_search(self, image):
-        # print("Size: ", image.shape[0], image.shape[1])
-        # Size: 230 x 248 = 80040 Pixels
-
-        # Count Object Pixels
+    def determine_obstacle(self, image):
         object_count = cv2.countNonZero(image[:image.shape[0]-int(self.CHASSIS_HEIGHT*image.shape[0]), :])
-        #print(object_count)
         if object_count < self.WHITE_MAX:
             if object_count > self.WHITE_MIN:
                 #print("Object Detected | {} Pixels".format(object_count))
@@ -116,14 +114,12 @@ class ObstacleDetection:
                 self.object_history[self.history_idx] = 0
             self.history_idx = (self.history_idx + 1) % self.BUFF_SIZE
 
-        # Determine if Object is Present
-        if self.object_history.count(1) >= 0.80 * self.BUFF_SIZE:
-            if self.path_clear:
+    def determine_state(self):
+        if self.path_clear and self.object_history.count(1) >= 0.80 * self.BUFF_SIZE:
                 rospy.loginfo(OBJECT_SEEN)
                 self.event_pub.publish(OBJECT_SEEN)
                 self.path_clear = False
-        elif self.object_history.count(0) >= 0.80 * self.BUFF_SIZE:
-            if not self.path_clear:
+        elif not self.path_clear and self.object_history.count(0) >= 0.80 * self.BUFF_SIZE:
                 rospy.loginfo(PATH_CLEAR)
                 self.event_pub.publish(PATH_CLEAR)
                 self.path_clear = True
@@ -141,7 +137,7 @@ class ObstacleDetection:
         self.read_param("/FollowingDirection", "following_dir", 1)
         self.read_param("/Debug", "is_debug", False)
         self.read_param("/ObjectBufferSize", "BUFF_SIZE", 5)
-        self.read_param("/ObjectCropBottom", "CROP_BOTTOM", 0.25)
+        self.read_param("/ObjectCropBottom", "CROP_BOTTOM", 0.250)
         self.read_param("/ObjectCropTop", "CROP_TOP", 0.10417)
         self.read_param("/ObjectCropSide", "CROP_SIDE", 0.353774)
         self.read_param("/ObjectChassisHeight", "CHASSIS_HEIGHT", 0.25)
