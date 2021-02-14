@@ -1,0 +1,101 @@
+# ********************************************* #
+# Cedarville University                         #
+# AutoNav Senior Design Team 2020-2021          #
+# ROS Parameters                                #
+# ********************************************* #
+
+#################### GLOBAL PARAMS ####################
+
+# Left or right following (left = -1, right = 1)
+FollowingDirection: -1
+
+# Debug (true or false)
+Debug: true
+
+# Debug parameters for particular people
+JoshuaDebug: false
+IsaiahDebug: true
+DanielDebug: false
+TrevorDebug: false
+
+#################### PID CONTROLLER PARAMS ####################
+
+# Default Speed of the robot
+DefaultSpeed: 20
+
+# Line PID controller coefficients
+LineCtrlKp: -0.05 # P
+LineCtrlKi: 0.0 # I
+LineCtrlKd: 0.0 # D
+
+# Object PID controller coefficients
+ObjCtrlKp: 0.025 # P
+ObjCtrlKi: 0.0 # I
+ObjCtrlKd: 1000.0 # D
+
+# GPS PID controller coefficients
+GpsCtrlKp: 2.5 # P
+GpsCtrlKi: 0.0 # I
+GpsCtrlKd: 0.0 # D
+
+# Distance for Time of Flight sensor to follow
+SideObjectDist: 600
+
+#################### OBJECT DETECTION PARAMS ####################
+
+# Percent of image.shape to crop off the depth camera image
+ObjectCropBottom: 0.40
+ObjectCropTop: 0.10
+ObjectCropSide: 0.30
+
+# Distance to object at which to trigger output
+ObjectStopDistance: 1.45
+
+# Size of depth camera output buffer to stabilize output
+ObjectBufferSize: 3
+# Percent of buffer that must be 1 to output TRUE or 0 to output FALSE
+ObjectBufferFill: 0.8
+
+#################### LINE DETECTION PARAMS ####################
+
+# Percent of image.shape to crop off the color camera image
+LineDetectCropBottom: 0.48
+LineDetectCropSide: 0.20
+
+# Size and of line detection output buffer to stabilize output
+LineDetectBufferSize: 10
+# Percent of buffer that must be 1 to output TRUE or 0 to output FALSE
+LineDetectBufferFill: 0.8
+
+#################### LINE FOLLOWING PARAMS ####################
+
+# Distance at which we are following the line (in pixels)
+LineDist: 200
+
+# Size of output buffer to stabilize line detection
+LineBufferSize: 5
+
+# Grayscale threshhold value to filter line image
+LineThreshMin: 250
+
+# Max value for setting binary line image
+LineThreshMax: 255
+
+# Pixel values for window searching for line
+LineHeightStart: 520.0
+LineHeightStep: 50.0
+
+# Number of frames before we are sure we lost the line
+LineLostCount: 100
+
+#################### GPS PARAMS ####################
+
+# GPS Waypoints
+WaypointLat1: 39.746936
+WaypointLon1: -83.813710
+WaypointLat2: 39.747070
+WaypointLon2: -83.813865
+WaypointLat3: 39.747246
+WaypointLon3: -83.813710
+WaypointLat4: 39.747330
+WaypointLon4: -83.813906
