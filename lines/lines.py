@@ -94,8 +94,6 @@ class Lines(AutoNavNode):
     def image_callback(self, ros_image):
         image = self.bridge_image(ros_image, "bgr8")
 
-        #rospy.logwarn("LINES STATE: {}".format(self.state))
-
         # Line Followings
         if self.state == self.LINE_FOLLOWING:
             self.line_detection.reset()
@@ -106,21 +104,14 @@ class Lines(AutoNavNode):
 
         # Line Detection
         elif self.state in self.line_detection_states:
-            found_updated, found_line, aligned_updated, aligned = self.line_detection.image_callback(image)
+            found_line, aligned = self.line_detection.image_callback(image)
             rospy.logwarn("Line Detection")
-            if found_updated and found_line:
+            if found_line:
                 rospy.logwarn(self.FOUND_LINE)
                 self.safe_publish(self.event_pub, self.FOUND_LINE)
-            elif found_updated:
-                rospy.logwarn(self.LOST_LINE)
-                self.safe_publish(self.event_pub, self.LOST_LINE)
-
-            if aligned_updated and aligned:
+            if aligned:
                 rospy.logwarn(self.ALIGNED)
                 self.safe_publish(self.event_pub, self.ALIGNED)
-            elif aligned_updated:
-                rospy.logwarn(self.NOT_ALIGNED)
-                self.safe_publish(self.event_pub, self.NOT_ALIGNED)
 
 def main(args):
     lines = Lines()

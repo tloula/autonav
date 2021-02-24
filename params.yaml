@@ -7,21 +7,52 @@
 #################### GLOBAL PARAMS ####################
 
 # Left or right following (left = -1, right = 1)
-FollowingDirection: -1
+FollowingDirection: 1
 
 # Debug (true or false)
-Debug: true
+Debug: false
+
+# State to start in
+# Line_Following = 1
+# Object_Avoidance_From_Line = 2
+# Object_Avoidance_From_GPS = 3
+# GPS_Navigation = 4
+# Line_To_Object = 5
+# Object_To_Line = 6
+# GPS_To_Object = 7
+# Find_Line = 8
+# Line_Orientation = 9
+StartState: 1
 
 # Debug parameters for particular people
+
+# used nowhere
 JoshuaDebug: false
+
+# used in line following
 IsaiahDebug: true
+
+# used in publisher
 DanielDebug: false
-TrevorDebug: false
+
+# used in line detection
+TrevorDebug: true
+
+#################### MAIN CONTROLLER PARAMS ####################
+
+# Rate for the callback of the timer in the main controller
+# 20 Hz
+TimerRate: 0.05
+
+#################### REALSENSE PUBLISHER PARAMS ####################
+
+# Display original unmodified camera images
+DisplayCameraImages: false
 
 #################### PID CONTROLLER PARAMS ####################
 
 # Default Speed of the robot
-DefaultSpeed: 20
+DefaultSpeed: 25
 
 # Line PID controller coefficients
 LineCtrlKp: -0.05 # P
@@ -29,9 +60,9 @@ LineCtrlKi: 0.0 # I
 LineCtrlKd: 0.0 # D
 
 # Object PID controller coefficients
-ObjCtrlKp: 0.025 # P
+ObjCtrlKp: -0.025 # P
 ObjCtrlKi: 0.0 # I
-ObjCtrlKd: 1000.0 # D
+ObjCtrlKd: -1000.0 # D
 
 # GPS PID controller coefficients
 GpsCtrlKp: 2.5 # P
@@ -48,8 +79,8 @@ ObjectCropBottom: 0.40
 ObjectCropTop: 0.10
 ObjectCropSide: 0.30
 
-# Distance to object at which to trigger output
-ObjectStopDistance: 1.45
+# Distance to object in meters at which to trigger output
+ObjectStopDistance: 1.75
 
 # Size of depth camera output buffer to stabilize output
 ObjectBufferSize: 3
@@ -59,13 +90,20 @@ ObjectBufferFill: 0.8
 #################### LINE DETECTION PARAMS ####################
 
 # Percent of image.shape to crop off the color camera image
-LineDetectCropBottom: 0.48
+LineDetectCropTop: 0.50
+LineDetectCropBottom: 0.20
 LineDetectCropSide: 0.20
+
+# Maximum percentage of white fill accepted until image is discarded
+LineDetectMaxWhite: .50
 
 # Size and of line detection output buffer to stabilize output
 LineDetectBufferSize: 10
 # Percent of buffer that must be 1 to output TRUE or 0 to output FALSE
 LineDetectBufferFill: 0.8
+
+# Length of line to trigger output (percent of image height)
+LineDetectMinLineLength: 0.35
 
 #################### LINE FOLLOWING PARAMS ####################
 

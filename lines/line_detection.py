@@ -70,11 +70,11 @@ class LineDetection:
             cv2.imshow("Line Detection Thresholded Image", grey)
             cv2.waitKey(1)
 
-        found_updated = self.determine_state()
-        aligned_updated = self.determine_orientation()
+        found_line = self.determine_state()
+        aligned = self.determine_orientation()
 
         self.pa.stop()
-        return found_updated, self.found_line, aligned_updated, self.aligned
+        return found_line, aligned
 
     def determine_line(self, image):
         lines = cv2.HoughLinesP(image, 1, np.pi/180, 150, minLineLength=int(image.shape[0]*self.MIN_LINE_LENGTH), maxLineGap=40)
@@ -88,17 +88,11 @@ class LineDetection:
         if not self.found_line and self.line_history.count(1) >= self.BUFF_FILL * self.BUFF_SIZE:
             self.found_line = True
             return True
-        elif self.found_line and self.line_history.count(0) >= self.BUFF_FILL * self.BUFF_SIZE:
-            self.found_line = False
-            return True
         return False
 
     def determine_orientation(self):
         if self.found_line and not self.aligned and self.slope >= 1:
             self.aligned = True
-            return True
-        elif self.found_line and self.aligned and self.slope < 1:
-            self.aligned = False
             return True
         return False
 
